@@ -28,8 +28,8 @@ ORDER BY whn;
 
 -- 5. Show the number of new cases in Italy for each week - show Monday only.
 SELECT tw.name, DATE_FORMAT(tw.whn,'%Y-%m-%d'), tw.confirmed - lw.confirmed
-FROM covid tw LEFT JOIN covid lw ON DATE_ADD(lw.whn, INTERVAL 1 WEEK) = tw.whn
-  AND tw.name=lw.name
+FROM covid tw
+LEFT JOIN covid lw ON DATE_ADD(lw.whn, INTERVAL 1 WEEK) = tw.whn AND tw.name=lw.name
 WHERE tw.name = 'Italy'
 AND WEEKDAY(tw.whn) = 0
 ORDER BY tw.whn;
@@ -42,20 +42,25 @@ ORDER BY confirmed DESC;
 
 -- 7. Show the infect rate ranking for each country. Only include countries with a population of at least 10 million.
 SELECT world.name, ROUND(100000*confirmed/population,0), RANK() OVER (ORDER BY (confirmed/population)) AS rank
-FROM covid JOIN world ON covid.name=world.name
-WHERE whn = '2020-04-20' AND population >= 10000000
+FROM covid
+JOIN world ON covid.name=world.name
+WHERE whn = '2020-04-20'
+AND population >= 10000000
 ORDER BY population DESC;
 
 -- 8. For each country that has had at last 1000 new cases in a single day, show the date of the peak number of new cases.
 --    NOTE: For some reason the query below isn't accepted by the site, but the results are correct
 --    as far as I can tell. If someone can see something wrong with it, please let me know.
-SELECT name, date, peakNewCases FROM
- (SELECT name, date, peakNewCases, RANK() OVER (PARTITION BY name ORDER BY peakNewCases DESC) as rank
-  FROM 
-   (SELECT name, DATE_FORMAT(whn,'%Y-%m-%d') AS date, 
-    confirmed - (LAG(confirmed, 1) OVER (PARTITION BY name ORDER BY whn)) AS peakNewCases 
-    FROM 
-     covid)  
-  TAB WHERE peakNewCases >= 1000)
-TAB WHERE rank = 1
+SELECT name, date, peakNewCases
+FROM
+(
+	SELECT name, date, peakNewCases, RANK() OVER (PARTITION BY name ORDER BY peakNewCases DESC) AS rank
+	FROM
+	(
+		SELECT name, DATE_FORMAT(whn,'%Y-%m-%d') AS date, confirmed - (LAG(confirmed, 1) OVER (PARTITION BY name ORDER BY whn)) AS peakNewCases
+		FROM covid
+	) TAB
+	WHERE peakNewCases >= 1000
+) TAB
+WHERE rank = 1
 ORDER BY date
