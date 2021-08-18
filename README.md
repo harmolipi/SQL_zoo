@@ -1,7 +1,7 @@
 # SQL Zoo
 Created as part of [The Odin Project](https://www.theodinproject.com) curriculum.
 
-View on [Github](https://github.com/harmolipi/SQL_zoo)
+View on [Github](https://github.com/harmolipi/SQL_zoo).
 
 ### Functionality
 
